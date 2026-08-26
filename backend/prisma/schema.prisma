@@ -1,0 +1,97 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+}
+
+// 1. MODEL USER (Quản lý người dùng và phân quyền)
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  fullName  String
+  phone     String?
+  address   String?
+
+  // Trường quan trọng để phân quyền Admin/User
+  role      Role     @default(USER)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Mối quan hệ: Một user có thể có nhiều đơn hàng
+  orders    Order[]
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+// 2. MODEL CATEGORY 
+model Category {
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  cakes Cake[] // Một danh mục có nhiều bánh
+}
+
+// 3. MODEL CAKE (Quản lý món bánh)
+model Cake {
+  id          Int         @id @default(autoincrement())
+  name        String
+  description String?     @db.Text
+  price       Decimal     @db.Decimal(10, 2)
+  image       String?     // Lưu đường dẫn ảnh bánh (URL)
+  stock       Int         @default(0) // Số lượng bánh còn trong kho
+
+  // Trạng thái bánh
+  bestseller  Boolean     @default(false) // Đánh dấu bán chạy
+  isAvailable Boolean     @default(true)  // Admin có thể ẩn bánh nếu hết nguyên liệu mà không cần xóa hẳn
+
+  // Mối quan hệ với Danh mục
+  categoryId  Int
+  category    Category    @relation(fields: [categoryId], references: [id])
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  orderItems  OrderItem[]
+}
+
+// 4. MODEL ORDER (Quản lý đơn hàng mua bánh)
+model Order {
+  id          Int         @id @default(autoincrement())
+  totalPrice  Decimal     @db.Decimal(10, 2)
+  status      OrderStatus @default(PENDING) // Trạng thái đơn hàng
+  address     String      // Địa chỉ giao bánh của đơn này
+  phone       String      // Số điện thoại nhận bánh
+
+  userId      Int
+  user        User        @relation(fields: [userId], references: [id])
+
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  items       OrderItem[]
+}
+
+enum OrderStatus {
+  PENDING    // Chờ xác nhận
+  CONFIRMED  // Đã xác nhận/Đang làm bánh
+  SHIPPING   // Đang giao
+  DELIVERED  // Đã giao thành công
+  CANCELLED  // Đã hủy
+}
+
+// 5. MODEL ORDERITEM (Chi tiết từng loại bánh trong đơn hàng)
+model OrderItem {
+  id       Int   @id @default(autoincrement())
+  quantity Int   // Số lượng mua của loại bánh này
+  price    Decimal @db.Decimal(10, 2) // Giá bánh tại thời điểm mua
+
+  orderId  Int
+  order    Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  cakeId   Int
+  cake     Cake    @relation(fields: [cakeId], references: [id])
+}
