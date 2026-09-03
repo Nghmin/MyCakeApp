@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import api from '../api/axios';
 import AdminOrders from './AdminOrders';
+import AdminCakes from './AdminCakes';
+import ProfilePage from './ProfilePage';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
@@ -13,7 +15,10 @@ function AdminDashboard() {
   const [activeTab, setActiveTab] = useState(initialTab);
   const [cakes, setCakes] = useState([]);
   const [categories, setCategories] = useState([]);
-  const user = JSON.parse(localStorage.getItem('user'));
+
+  const authData = JSON.parse(localStorage.getItem('user'));
+  const user = authData?.user || authData;
+
   const [newCake, setNewCake] = useState({
     name: '',
     description: '',
@@ -116,7 +121,11 @@ function AdminDashboard() {
 
       <div style={{ flex: 1, padding: '40px 8%' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-          <h1 style={{ color: '#2b1e17', margin: 0 }}>Bảng Điều Khiển Admin</h1>
+          <div>
+            <h1 style={{ color: '#2b1e17', margin: 0 }}>Bảng Điều Khiển Quản Trị</h1>
+            <p style={{ color: '#888', marginTop: '5px' }}>Chào Admin, chúc bạn một ngày làm việc hiệu quả!</p>
+          </div>
+
           <div style={{ display: 'flex', gap: '10px', backgroundColor: '#fff', padding: '5px', borderRadius: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)' }}>
             <button
               onClick={() => setActiveTab('cakes')}
@@ -128,104 +137,30 @@ function AdminDashboard() {
               onClick={() => setActiveTab('orders')}
               style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: activeTab === 'orders' ? '#2b1e17' : 'transparent', color: activeTab === 'orders' ? 'white' : '#666', border: 'none', borderRadius: '8px', fontWeight: 'bold', transition: '0.3s' }}
             >
-              📋 Quản Lý Đơn Hàng
+              📋 Đơn Hàng
+            </button>
+            <button
+              onClick={() => setActiveTab('UserInfo')}
+              style={{ padding: '10px 20px', cursor: 'pointer', backgroundColor: activeTab === 'UserInfo' ? '#2b1e17' : 'transparent', color: activeTab === 'UserInfo' ? 'white' : '#666', border: 'none', borderRadius: '8px', fontWeight: 'bold', transition: '0.3s' }}
+            >
+              👤 Hồ Sơ
             </button>
           </div>
         </div>
 
-        {activeTab === 'cakes' ? (
-          <div style={{ display: 'grid', gridTemplateColumns: '400px 1fr', gap: '30px', alignItems: 'start' }}>
-            {/* Form thêm bánh */}
+        {activeTab === 'cakes' && <AdminCakes />}
+
+        {activeTab === 'orders' && <AdminOrders />}
+
+        {activeTab === 'UserInfo' && (
+          <div style={{ display: 'grid', gridTemplateColumns: '350px 1fr', gap: '30px', alignItems: 'start' }}>
             <div style={{ background: '#fff', padding: '30px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-              <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#2b1e17' }}>✨ Thêm Bánh Mới</h3>
-              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                <div>
-                  <label style={{ fontSize: '13px', color: '#888', display: 'block', marginBottom: '5px' }}>Tên sản phẩm</label>
-                  <input type="text" name="name" placeholder="Ví dụ: Bánh Mousse Dâu" value={newCake.name} onChange={handleInputChange} required style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd', boxSizing: 'border-box' }} />
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                  <div>
-                    <label style={{ fontSize: '13px', color: '#888', display: 'block', marginBottom: '5px' }}>Giá tiền (VND)</label>
-                    <input type="number" name="price" placeholder="50000" value={newCake.price} onChange={handleInputChange} required style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd', boxSizing: 'border-box' }} />
-                  </div>
-                  <div>
-                    <label style={{ fontSize: '13px', color: '#888', display: 'block', marginBottom: '5px' }}>Số lượng kho</label>
-                    <input type="number" name="stock" placeholder="10" value={newCake.stock} onChange={handleInputChange} required style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd', boxSizing: 'border-box' }} />
-                  </div>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '13px', color: '#888', display: 'block', marginBottom: '5px' }}>Danh mục</label>
-                  <select name="categoryId" value={newCake.categoryId} onChange={handleInputChange} required style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd', appearance: 'none', background: '#fff' }}>
-                    <option value="">-- Chọn danh mục --</option>
-                    {categories.map(cat => (
-                      <option key={cat.id} value={cat.id}>{cat.name}</option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '13px', color: '#888', display: 'block', marginBottom: '5px' }}>Hình ảnh sản phẩm</label>
-                  <input type="file" name="image" accept="image/*" onChange={handleInputChange} style={{ width: '100%', padding: '8px', border: '1px dashed #ccc', borderRadius: '8px' }} />
-                </div>
-
-                <div>
-                  <label style={{ fontSize: '13px', color: '#888', display: 'block', marginBottom: '5px' }}>Mô tả sản phẩm</label>
-                  <textarea name="description" placeholder="Nhập mô tả ngắn về bánh..." value={newCake.description} onChange={handleInputChange} style={{ width: '100%', padding: '12px', borderRadius: '8px', border: '1px solid #ddd', height: '80px', boxSizing: 'border-box', resize: 'none' }}></textarea>
-                </div>
-
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px' }}>
-                  <input type="checkbox" name="bestseller" checked={newCake.bestseller} onChange={handleInputChange} style={{ width: '18px', height: '18px' }} />
-                  <span>Đánh dấu là sản phẩm bán chạy</span>
-                </label>
-
-                <button type="submit" disabled={loading} style={{ marginTop: '10px', padding: '15px', backgroundColor: '#d4883b', color: 'white', border: 'none', borderRadius: '30px', cursor: 'pointer', fontWeight: 'bold', fontSize: '16px' }}>
-                  {loading ? '⏳ Đang xử lý...' : '➕ Thêm Vào Cửa Hàng'}
-                </button>
-              </form>
+              <ProfilePage type="summary" />
             </div>
-
-            {/* Danh sách bánh */}
             <div style={{ background: '#fff', padding: '30px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-              <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#2b1e17' }}>🍱 Danh Sách Bánh ({cakes.length})</h3>
-              <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '2px solid #f5f5f5', color: '#888', fontSize: '14px' }}>
-                      <th style={{ padding: '12px' }}>Sản phẩm</th>
-                      <th style={{ padding: '12px' }}>Giá</th>
-                      <th style={{ padding: '12px' }}>Kho</th>
-                      <th style={{ padding: '12px' }}>Hành động</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {cakes.map(cake => (
-                      <tr key={cake.id} style={{ borderBottom: '1px solid #f9f9f9' }}>
-                        <td style={{ padding: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <img src={cake.image || 'https://via.placeholder.com/40'} alt="" style={{ width: '45px', height: '45px', borderRadius: '8px', objectFit: 'cover' }} />
-                          <div style={{ fontWeight: '500', color: '#333' }}>{cake.name}</div>
-                        </td>
-                        <td style={{ padding: '12px', color: '#d4883b', fontWeight: 'bold' }}>{new Intl.NumberFormat('vi-VN').format(cake.price)}đ</td>
-                        <td style={{ padding: '12px' }}>
-                          <span style={{ padding: '4px 10px', borderRadius: '12px', backgroundColor: cake.stock < 5 ? '#fff3f3' : '#f0f9f4', color: cake.stock < 5 ? '#e74c3c' : '#27ae60', fontSize: '12px', fontWeight: 'bold' }}>
-                            {cake.stock} chiếc
-                          </span>
-                        </td>
-                        <td style={{ padding: '12px' }}>
-                          <button onClick={() => handleDelete(cake.id)} style={{ padding: '6px 12px', color: '#e74c3c', border: '1px solid #ffecec', backgroundColor: '#fff5f5', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
-                            🗑️ Xóa
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <ProfilePage type="form" />
             </div>
           </div>
-        ) : (
-          <AdminOrders />
         )}
       </div>
 

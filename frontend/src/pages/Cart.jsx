@@ -25,7 +25,7 @@ function Cart() {
 
     try {
       const orderData = {
-        address: user.address || 'Địa chỉ mặc định', // Bạn có thể thêm form nhập địa chỉ ở đây
+        address: user.address || 'Địa chỉ mặc định',
         phone: user.phone || '0000000000',
         items: cartItems.map(item => ({
           cakeId: item.id,

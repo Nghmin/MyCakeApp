@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
+import { DEFAULT_AVATAR } from '../utils/constants';
 import api from '../api/axios';
 
 function Navbar({ user, onLogout }) {
@@ -22,7 +23,7 @@ function Navbar({ user, onLogout }) {
     };
     fetchCategories();
   }, []);
-
+  
   // Kiểm tra quyền Admin
   const isAdmin = user && (user.role === 'ADMIN');
 
@@ -74,15 +75,20 @@ function Navbar({ user, onLogout }) {
           ))}
         </nav>
 
+        {/* Thanh tim kiếm */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>Thanh tim kiếm</div> 
+
         {/* Khung bên phải (Giỏ hàng & User/Admin) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', position: 'relative', zIndex: 1000 , borderColor : 'blue' }}>
 
           {/* Nút Giỏ Hàng */}
-          <Link to="/cart" style={{ textDecoration: 'none' }}>
-            <button style={{ backgroundColor: '#fdf6ed', color: '#d4883b', border: '1px solid #e2cbb4', padding: '8px 16px', borderRadius: '20px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
-              🛒 Giỏ hàng ({cartItems?.reduce((acc, item) => acc + item.quantity, 0) || 0})
-            </button>
-          </Link>
+          { !isAdmin && (
+            <Link to="/cart" style={{ textDecoration: 'none' }}>
+              <button style={{ backgroundColor: '#fdf6ed', color: '#d4883b', border: '1px solid #e2cbb4', padding: '8px 16px', borderRadius: '20px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                🛒 Giỏ hàng ({cartItems?.reduce((acc, item) => acc + item.quantity, 0) || 0})
+              </button>
+            </Link>
+          )}
 
           {/* Phân quyền hiển thị User vs Admin */}
           {user ? (
@@ -95,7 +101,7 @@ function Navbar({ user, onLogout }) {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 12px', borderRadius: '20px', backgroundColor: '#f5f5f5', border: '1px solid #ddd' }}>
                   <span style={{ fontSize: '18px' }}>☰</span>
                   <img
-                    src={user.avatar || 'https://via.placeholder.com/35?text=Admin'}
+                    src={DEFAULT_AVATAR.ADMIN}
                     alt="Admin Avatar"
                     style={{ width: '30px', height: '30px', borderRadius: '50%', objectFit: 'cover' }}
                   />
@@ -108,13 +114,13 @@ function Navbar({ user, onLogout }) {
                     <div style={{ padding: '8px 16px', fontSize: '12px', color: '#888', borderBottom: '1px solid #eee' }}>
                       Xin chào, <b>{user.fullName || 'Admin'}</b>
                     </div>
-                    <Link to="/admin" style={{ display: 'block', padding: '10px 16px', color: '#333', textDecoration: 'none', fontSize: '14px' }}>
+                    <Link to="/admin?tab=cakes" style={{ display: 'block', padding: '10px 16px', color: '#333', textDecoration: 'none', fontSize: '14px' }}>
                       📦 Quản lý bánh
                     </Link>
                     <Link to="/admin?tab=orders" style={{ display: 'block', padding: '10px 16px', color: '#333', textDecoration: 'none', fontSize: '14px' }}>
                       📋 Quản lý đơn hàng
                     </Link>
-                    <Link to="/profile" style={{ display: 'block', padding: '10px 16px', color: '#333', textDecoration: 'none', fontSize: '14px' }}>
+                    <Link to="/user?tab=UserInfo" style={{ display: 'block', padding: '10px 16px', color: '#333', textDecoration: 'none', fontSize: '14px' }}>
                       👤 Thông tin cá nhân
                     </Link>
                     <div style={{ borderTop: '1px solid #eee', marginTop: '5px' }}>
@@ -136,7 +142,7 @@ function Navbar({ user, onLogout }) {
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '4px 10px', borderRadius: '20px' }}>
                   <img
-                    src={user.avatar || 'https://via.placeholder.com/35?text=User'}
+                    src={DEFAULT_AVATAR.USER}
                     alt=""
                     style={{ width: '35px', height: '35px', borderRadius: '50%', objectFit: 'cover', border: '2px solid #d4883b' }}
                   />
@@ -147,10 +153,10 @@ function Navbar({ user, onLogout }) {
 
                 {isUserMenuOpen && (
                   <div style={{ position: 'absolute', top: '100%', right: 0, width: '200px', backgroundColor: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', borderRadius: '8px', padding: '8px 0', zIndex: 1001, border: '1px solid #eee' }}>
-                    <Link to="/profile" style={{ display: 'block', padding: '10px 16px', color: '#333', textDecoration: 'none', fontSize: '14px' }}>
+                    <Link to="/user?tab=UserInfo" style={{ display: 'block', padding: '10px 16px', color: '#333', textDecoration: 'none', fontSize: '14px' }}>
                       👤 Thông tin cá nhân
                     </Link>
-                    <Link to="/orders" style={{ display: 'block', padding: '10px 16px', color: '#333', textDecoration: 'none', fontSize: '14px' }}>
+                    <Link to="/user?tab=OrderHistory" style={{ display: 'block', padding: '10px 16px', color: '#333', textDecoration: 'none', fontSize: '14px' }}>
                       📜 Lịch sử đơn hàng
                     </Link>
                     <div style={{ borderTop: '1px solid #eee', marginTop: '5px' }}>

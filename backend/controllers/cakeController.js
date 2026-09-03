@@ -1,7 +1,24 @@
-const prisma = require('../config/prisma');
+import prisma from '../config/prisma.js';
+import { cloudinary } from '../config/cloudinary.js';
+
+// Hàm xóa ảnh trên Cloudinary
+const deleteCloudinaryImage = async (imageUrl) => {
+  if (!imageUrl || !imageUrl.includes('cloudinary.com')) return;
+  try {
+    const parts = imageUrl.split('/');
+    const myCakeAppIndex = parts.indexOf('MyCakeApp');
+    if (myCakeAppIndex !== -1) {
+      const fileWithExtension = parts[parts.length - 1];
+      const publicId = `MyCakeApp/${fileWithExtension.split('.')[0]}`;
+      await cloudinary.uploader.destroy(publicId);
+    }
+  } catch (error) {
+    console.error('Lỗi xóa ảnh cũ trên Cloudinary:', error);
+  }
+};
 
 // Lấy tất cả bánh 
-exports.getAllCakes = async (req, res) => {
+export const getAllCakes = async (req, res) => {
   try {
     const cakes = await prisma.cake.findMany({
       include: { category: true } // Lấy kèm thông tin danh mục
@@ -13,7 +30,7 @@ exports.getAllCakes = async (req, res) => {
 };
 
 // Lấy chi tiết 1 cái bánh
-exports.getCakeById = async (req, res) => {
+export const getCakeById = async (req, res) => {
   try {
     const cake = await prisma.cake.findUnique({
       where: { id: parseInt(req.params.id) },
@@ -27,7 +44,7 @@ exports.getCakeById = async (req, res) => {
 };
 
 // Thêm bánh mới (Admin)
-exports.createCake = async (req, res) => {
+export const createCake = async (req, res) => {
   try {
     const { name, description, price, stock, categoryId, bestseller } = req.body;
     let imageUrl = req.body.image; 
@@ -55,12 +72,22 @@ exports.createCake = async (req, res) => {
 };
 
 // Cập nhật bánh (Admin)
-exports.updateCake = async (req, res) => {
+export const updateCake = async (req, res) => {
   try {
     const { name, description, price, stock, categoryId, bestseller, isAvailable } = req.body;
     let imageUrl = req.body.image;
 
+    // Nếu có file mới, xóa ảnh cũ trên Cloudinary
     if (req.file) {
+      const oldCake = await prisma.cake.findUnique({
+        where: { id: parseInt(req.params.id) },
+        select: { image: true }
+      });
+
+      if (oldCake?.image) {
+        await deleteCloudinaryImage(oldCake.image);
+      }
+
       imageUrl = req.file.path;
     }
 
@@ -84,12 +111,24 @@ exports.updateCake = async (req, res) => {
 };
 
 // Xóa bánh (Admin)
-exports.deleteCake = async (req, res) => {
+export const deleteCake = async (req, res) => {
   try {
-    await prisma.cake.delete({
-      where: { id: parseInt(req.params.id) }
+    const cakeId = parseInt(req.params.id);
+
+    // Lấy thông tin bánh để lấy URL ảnh trước khi xóa
+    const cake = await prisma.cake.findUnique({
+      where: { id: cakeId },
+      select: { image: true }
     });
-    res.json({ message: 'Đã xóa bánh thành công' });
+
+    if (cake?.image) {
+      await deleteCloudinaryImage(cake.image);
+    }
+
+    await prisma.cake.delete({
+      where: { id: cakeId }
+    });
+    res.json({ message: 'Đã xóa bánh và ảnh thành công' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }

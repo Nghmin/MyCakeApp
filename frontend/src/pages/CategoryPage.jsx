@@ -12,8 +12,6 @@ function CategoryPage() {
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
 
-  // Hàm chuyển đổi slug ngược lại tên danh mục để hiển thị hoặc gọi API
-  // Tuy nhiên, cách tốt nhất là Backend hỗ trợ lọc theo slug hoặc ID
   useEffect(() => {
     const fetchData = async () => {
       setLoading(true);

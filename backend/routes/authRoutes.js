@@ -1,7 +1,7 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const authController = require('../controllers/authController');
-const { verifyToken } = require('../middleware/authMiddleware');
+import * as authController from '../controllers/authController.js';
+import { verifyToken } from '../middleware/authMiddleware.js';
 
 // @route   POST /api/auth/register
 router.post('/register', authController.register);
@@ -15,4 +15,4 @@ router.get('/profile', verifyToken, authController.getProfile);
 // @route   PUT /api/auth/profile
 router.put('/profile', verifyToken, authController.updateProfile);
 
-module.exports = router;
+export default router;

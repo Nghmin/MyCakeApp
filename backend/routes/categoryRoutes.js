@@ -1,17 +1,17 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const categoryController = require('../controllers/categoryController');
-const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
+import * as categoryController from '../controllers/categoryController.js';
+import { verifyToken, isAdmin } from '../middleware/authMiddleware.js';
 
 // @route   GET /api/categories
 router.get('/', categoryController.getAllCategories);
 
 // @route   POST /api/categories
-// @desc    Thêm danh mục (Chỉ Admin)
+// @desc    Thêm danh mục (Admin)
 router.post('/', verifyToken, isAdmin, categoryController.createCategory);
 
 // @route   DELETE /api/categories/:id
-// @desc    Xóa danh mục (Chỉ Admin)
+// @desc    Xóa danh mục (Admin)
 router.delete('/:id', verifyToken, isAdmin, categoryController.deleteCategory);
 
-module.exports = router;
+export default router;

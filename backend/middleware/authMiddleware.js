@@ -1,7 +1,7 @@
-const jwt = require('jsonwebtoken');
+import jwt from 'jsonwebtoken';
 
 // Kiểm tra Token
-const verifyToken = (req, res, next) => {
+export const verifyToken = (req, res, next) => {
   const token = req.header('Authorization');
 
   if (!token) {
@@ -19,12 +19,10 @@ const verifyToken = (req, res, next) => {
 };
 
 // Kiểm tra quyền Admin
-const isAdmin = (req, res, next) => {
+export const isAdmin = (req, res, next) => {
   if (req.user && req.user.role === 'ADMIN') {
     next();
   } else {
     res.status(403).json({ message: 'Truy cập bị từ chối: Yêu cầu quyền Admin' });
   }
 };
-
-module.exports = { verifyToken, isAdmin };

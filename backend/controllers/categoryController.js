@@ -1,7 +1,7 @@
-const prisma = require('../config/prisma');
+import prisma from '../config/prisma.js';
 
 // Lấy tất cả danh mục
-exports.getAllCategories = async (req, res) => {
+export const getAllCategories = async (req, res) => {
   try {
     const categories = await prisma.category.findMany();
     res.json(categories);
@@ -11,7 +11,7 @@ exports.getAllCategories = async (req, res) => {
 };
 
 // Thêm danh mục (Admin)
-exports.createCategory = async (req, res) => {
+export const createCategory = async (req, res) => {
   try {
     const { name } = req.body;
     const newCategory = await prisma.category.create({
@@ -24,7 +24,7 @@ exports.createCategory = async (req, res) => {
 };
 
 // Xóa danh mục (Admin)
-exports.deleteCategory = async (req, res) => {
+export const deleteCategory = async (req, res) => {
   try {
     await prisma.category.delete({
       where: { id: parseInt(req.params.id) }

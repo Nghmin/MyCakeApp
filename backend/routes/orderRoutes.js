@@ -1,11 +1,15 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const orderController = require('../controllers/orderController');
-const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
+import * as orderController from '../controllers/orderController.js';
+import { verifyToken, isAdmin } from '../middleware/authMiddleware.js';
 
 // @route   POST /api/orders
 // @desc    Tạo đơn hàng mới (User)
 router.post('/', verifyToken, orderController.createOrder);
+
+// @route   PUT /api/orders/:id/cancel
+// @desc    Hủy đơn hàng của tôi (User)
+router.put('/my/:id/cancel', verifyToken, orderController.cancelMyOrder);
 
 // @route   GET /api/orders/my
 // @desc    Lấy lịch sử đơn hàng của tôi (User)
@@ -19,4 +23,4 @@ router.get('/', verifyToken, isAdmin, orderController.getAllOrders);
 // @desc    Cập nhật trạng thái đơn hàng (Admin)
 router.put('/:id', verifyToken, isAdmin, orderController.updateOrderStatus);
 
-module.exports = router;
+export default router;

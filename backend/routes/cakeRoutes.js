@@ -1,8 +1,8 @@
-const express = require('express');
+import express from 'express';
 const router = express.Router();
-const cakeController = require('../controllers/cakeController');
-const { verifyToken, isAdmin } = require('../middleware/authMiddleware');
-const uploadCloud = require('../config/cloudinary');
+import * as cakeController from '../controllers/cakeController.js';
+import { verifyToken, isAdmin } from '../middleware/authMiddleware.js';
+import uploadCloud from '../config/cloudinary.js';
 
 // @route   GET /api/cakes
 // @desc    Lấy tất cả bánh
@@ -24,4 +24,4 @@ router.put('/:id', verifyToken, isAdmin, uploadCloud.single('image'), cakeContro
 // @desc    Xóa bánh (Chỉ Admin)
 router.delete('/:id', verifyToken, isAdmin, cakeController.deleteCake);
 
-module.exports = router;
+export default router;

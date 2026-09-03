@@ -4,25 +4,35 @@ import CategoryPage from './pages/CategoryPage';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import AdminDashboard from './pages/AdminDashboard';
+import UserDashboard from './pages/UserDashboard';
 import Cart from './pages/Cart';
-import OrderHistory from './pages/OrderHistory';
-import ProfilePage from './pages/ProfilePage';
+
+// Helper để lấy user từ localStorage
+const getAuthUser = () => {
+  const authData = JSON.parse(localStorage.getItem('user'));
+  return authData?.user || authData;
+};
 
 // Component bảo vệ Route Admin
 const AdminRoute = ({ children }) => {
-  const user = JSON.parse(localStorage.getItem('user'));
-
-  // Kiểm tra chính xác quyền ADMIN
+  const user = getAuthUser();
   if (!user || user.role !== 'ADMIN') {
-    alert("Bạn không có quyền truy cập trang này!");
     return <Navigate to="/login" />;
   }
+  return children;
+};
 
+// Component bảo vệ Route User
+const UserRoute = ({ children }) => {
+  const user = getAuthUser();
+  if (!user) {
+    return <Navigate to="/login" />;
+  }
   return children;
 };
 
 function App() {
-  const user = JSON.parse(localStorage.getItem('user'));
+  const user = getAuthUser();
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -32,25 +42,53 @@ function App() {
   return (
     <Router>
       <Routes>
-        {/* Trang chủ */}
+        {/* Trang công khai */}
         <Route path="/" element={<Home user={user} onLogout={handleLogout} />} />
         <Route path="/category/:slug" element={<CategoryPage />} />
-        {/* Các trang chức năng */}
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/cart" element={<Cart />} />
-        <Route path="/orders" element={<OrderHistory />} />
-        <Route path="/profile" element={<ProfilePage />} />
 
-        {/* Route bảo vệ dành riêng cho Admin */}
+        {/* Chuyển hướng các đường dẫn cũ về Dashboard tương ứng */}
         <Route
-          path="/admin/*"
+          path="/profile"
+          element={
+            user?.role === 'ADMIN'
+              ? <Navigate to="/admin?tab=UserInfo" />
+              : <Navigate to="/user?tab=UserInfo" />
+          }
+        />
+        <Route
+          path="/orders"
+          element={
+            user?.role === 'ADMIN'
+              ? <Navigate to="/admin?tab=orders" />
+              : <Navigate to="/user?tab=OrderHistory" />
+          }
+        />
+
+        {/* Dashboard cho User */}
+        <Route
+          path="/user"
+          element={
+            <UserRoute>
+              <UserDashboard />
+            </UserRoute>
+          }
+        />
+
+        {/* Dashboard cho Admin */}
+        <Route
+          path="/admin"
           element={
             <AdminRoute>
               <AdminDashboard />
             </AdminRoute>
           }
         />
+
+        {/* Fallback - Nếu vào link không tồn tại */}
+        <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </Router>
   );

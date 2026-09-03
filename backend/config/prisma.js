@@ -1,11 +1,11 @@
-const { Pool } = require('pg');
-const { PrismaPg } = require('@prisma/adapter-pg');
-const { PrismaClient } = require('@prisma/client');
+import pkg from 'pg';
+const { Pool } = pkg;
+import { PrismaPg } from '@prisma/adapter-pg';
+import { PrismaClient } from '@prisma/client';
 
-// Lấy URL kết nối từ biến môi trường
 const connectionString = process.env.DATABASE_URL;
 
-// Khởi tạo Pool kết nối của thư viện 'pg'
+
 const pool = new Pool({ 
   connectionString,
   ssl: {
@@ -13,10 +13,8 @@ const pool = new Pool({
   }
 });
 
-// Sử dụng adapter của Prisma 7 để kết nối PostgreSQL
 const adapter = new PrismaPg(pool);
 
-// Tạo instance PrismaClient với adapter
 const prisma = new PrismaClient({ adapter });
 
-module.exports = prisma;
+export default prisma;

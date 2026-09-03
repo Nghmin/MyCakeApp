@@ -11,23 +11,33 @@ function Register() {
     phone: '',
     address: ''
   });
-  const [error, setError] = useState('');
+  const [errors, setErrors] = useState({});
+  const [generalError, setGeneralError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
+    const { name, value } = e.target;
     setFormData({
       ...formData,
-      [e.target.name]: e.target.value
+      [name]: value
     });
+
+    if (errors[name]) {
+      setErrors((prev) => ({ ...prev, [name]: '' }));
+    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setErrors({});
+    setGeneralError('');
 
     if (formData.password !== formData.confirmPassword) {
-      return setError('Mật khẩu xác nhận không khớp');
+      return setErrors((prev) => ({
+        ...prev,
+        confirmPassword: 'Mật khẩu xác nhận không khớp'
+      }));
     }
 
     setLoading(true);
@@ -43,8 +53,12 @@ function Register() {
       alert(response.data.message || 'Đăng ký thành công!');
       navigate('/login');
     } catch (err) {
-      setError(err.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
-      console.log("Lỗi đăng ký:", err);
+      if (err.response?.data?.errors) {
+        setErrors(err.response.data.errors);
+      } else {
+        setGeneralError(err.response?.data?.message || 'Có lỗi xảy ra khi đăng ký');
+      }
+      console.error('Lỗi khi đăng ký:', err.response?.data || err.message);
     } finally {
       setLoading(false);
     }
@@ -62,14 +76,17 @@ function Register() {
           <p style={{ color: '#888', marginTop: '10px' }}>Tạo tài khoản để nhận nhiều ưu đãi từ Phenikaa Cake</p>
         </div>
 
-        {error && (
+        {/* Lỗi chung từ hệ thống nếu có */}
+        {generalError && (
           <div style={{ backgroundColor: '#fff5f5', color: '#e74c3c', padding: '12px', borderRadius: '8px', marginBottom: '20px', fontSize: '14px', textAlign: 'center', border: '1px solid #ffecec' }}>
-            ⚠️ {error}
+            ⚠️ {generalError}
           </div>
         )}
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+          
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+            {/* Họ và tên */}
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#555', marginBottom: '6px' }}>Họ và tên</label>
               <input
@@ -78,10 +95,12 @@ function Register() {
                 value={formData.fullName}
                 onChange={handleChange}
                 placeholder="Nguyễn Văn A"
-                style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box' }}
-                required
+                style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: errors.fullName ? '1px solid #e74c3c' : '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box' }}
               />
+              {errors.fullName && <span style={{ color: '#e74c3c', fontSize: '12px', marginTop: '4px', display: 'block' }}>{errors.fullName}</span>}
             </div>
+
+            {/* Số điện thoại */}
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#555', marginBottom: '6px' }}>Số điện thoại</label>
               <input
@@ -90,11 +109,13 @@ function Register() {
                 value={formData.phone}
                 onChange={handleChange}
                 placeholder="0912xxxxxx"
-                style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box' }}
+                style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: errors.phone ? '1px solid #e74c3c' : '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box' }}
               />
+              {errors.phone && <span style={{ color: '#e74c3c', fontSize: '12px', marginTop: '4px', display: 'block' }}>{errors.phone}</span>}
             </div>
           </div>
 
+          {/* Email */}
           <div>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#555', marginBottom: '6px' }}>Địa chỉ Email</label>
             <input
@@ -103,11 +124,12 @@ function Register() {
               value={formData.email}
               onChange={handleChange}
               placeholder="ten@example.com"
-              style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box' }}
-              required
+              style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: errors.email ? '1px solid #e74c3c' : '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box' }}
             />
+            {errors.email && <span style={{ color: '#e74c3c', fontSize: '12px', marginTop: '4px', display: 'block' }}>{errors.email}</span>}
           </div>
 
+          {/* Địa chỉ */}
           <div>
             <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#555', marginBottom: '6px' }}>Địa chỉ giao hàng</label>
             <input
@@ -116,11 +138,13 @@ function Register() {
               value={formData.address}
               onChange={handleChange}
               placeholder="Số nhà, Tên đường, Quận/Huyện..."
-              style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box' }}
+              style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: errors.address ? '1px solid #e74c3c' : '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box' }}
             />
+            {errors.address && <span style={{ color: '#e74c3c', fontSize: '12px', marginTop: '4px', display: 'block' }}>{errors.address}</span>}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+            {/* Mật khẩu */}
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#555', marginBottom: '6px' }}>Mật khẩu</label>
               <input
@@ -129,10 +153,12 @@ function Register() {
                 value={formData.password}
                 onChange={handleChange}
                 placeholder="••••••••"
-                style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box' }}
-                required
+                style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: errors.password ? '1px solid #e74c3c' : '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box' }}
               />
+              {errors.password && <span style={{ color: '#e74c3c', fontSize: '12px', marginTop: '4px', display: 'block' }}>{errors.password}</span>}
             </div>
+
+            {/* Xác nhận mật khẩu */}
             <div>
               <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#555', marginBottom: '6px' }}>Xác nhận</label>
               <input
@@ -141,9 +167,9 @@ function Register() {
                 value={formData.confirmPassword}
                 onChange={handleChange}
                 placeholder="••••••••"
-                style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box' }}
-                required
+                style={{ width: '100%', padding: '12px 16px', borderRadius: '12px', border: errors.confirmPassword ? '1px solid #e74c3c' : '1px solid #ddd', fontSize: '14px', boxSizing: 'border-box' }}
               />
+              {errors.confirmPassword && <span style={{ color: '#e74c3c', fontSize: '12px', marginTop: '4px', display: 'block' }}>{errors.confirmPassword}</span>}
             </div>
           </div>
 
