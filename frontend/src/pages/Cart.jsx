@@ -3,16 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import useAuthStore from '../store/useAuthStore';
 
 function Cart() {
   const { cartItems, removeFromCart, updateQuantity, totalPrice, clearCart } = useCart();
   const navigate = useNavigate();
-  const user = JSON.parse(localStorage.getItem('user'));
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    window.location.href = '/login';
-  };
+  const user = useAuthStore(state => state.user);
 
   const handleCheckout = async () => {
     // ... logic checkout ...
@@ -45,7 +41,7 @@ function Cart() {
 
   return (
     <div style={{ backgroundColor: '#faf6f0', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Navbar user={user} onLogout={handleLogout} />
+      <Navbar />
 
       <div style={{ flex: 1, padding: '40px 8%' }}>
         <h1 style={{ color: '#2b1e17', marginBottom: '30px' }}>Giỏ hàng của bạn</h1>

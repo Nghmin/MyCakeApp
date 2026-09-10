@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import api from '../api/axios';
 import { DEFAULT_AVATAR } from '../utils/constants';
+import useAuthStore from '../store/useAuthStore';
 
 const ProfilePage = ({ type = 'full' }) => {
+  const login = useAuthStore(state => state.login);
   const [user, setUser] = useState({
     fullName: '',
     email: '',
@@ -38,14 +40,9 @@ const ProfilePage = ({ type = 'full' }) => {
     try {
       await api.put('/auth/profile', user);
       alert('Cập nhật thông tin thành công!');
-      // Cập nhật lại localStorage để Navbar đồng bộ
-      const authData = JSON.parse(localStorage.getItem('user'));
-      if (authData.user) {
-        authData.user = { ...authData.user, ...user };
-      } else {
-        Object.assign(authData, user);
-      }
-      localStorage.setItem('user', JSON.stringify(authData));
+
+      // Cập nhật lại Zustand store để Navbar và các trang khác đồng bộ
+      login(user);
     } catch (error) {
       alert(error.response?.data?.message || 'Cập nhật thất bại');
     } finally {

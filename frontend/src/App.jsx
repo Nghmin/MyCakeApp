@@ -1,4 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import useAuthStore from './store/useAuthStore';
 import Home from './pages/Home';
 import CategoryPage from './pages/CategoryPage';
 import Login from './pages/Login';
@@ -7,15 +8,9 @@ import AdminDashboard from './pages/AdminDashboard';
 import UserDashboard from './pages/UserDashboard';
 import Cart from './pages/Cart';
 
-// Helper để lấy user từ localStorage
-const getAuthUser = () => {
-  const authData = JSON.parse(localStorage.getItem('user'));
-  return authData?.user || authData;
-};
-
 // Component bảo vệ Route Admin
 const AdminRoute = ({ children }) => {
-  const user = getAuthUser();
+  const { user } = useAuthStore();
   if (!user || user.role !== 'ADMIN') {
     return <Navigate to="/login" />;
   }
@@ -24,7 +19,7 @@ const AdminRoute = ({ children }) => {
 
 // Component bảo vệ Route User
 const UserRoute = ({ children }) => {
-  const user = getAuthUser();
+  const { user } = useAuthStore();
   if (!user) {
     return <Navigate to="/login" />;
   }
@@ -32,18 +27,13 @@ const UserRoute = ({ children }) => {
 };
 
 function App() {
-  const user = getAuthUser();
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    window.location.href = '/login';
-  };
+  const { user } = useAuthStore();
 
   return (
     <Router>
       <Routes>
         {/* Trang công khai */}
-        <Route path="/" element={<Home user={user} onLogout={handleLogout} />} />
+        <Route path="/" element={<Home />} />
         <Route path="/category/:slug" element={<CategoryPage />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />

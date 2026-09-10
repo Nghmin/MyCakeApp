@@ -2,16 +2,18 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { DEFAULT_AVATAR } from '../utils/constants';
+import useAuthStore from '../store/useAuthStore';
 import api from '../api/axios';
 
-function Navbar({ user, onLogout }) {
+function Navbar() {
+  const { user, logout } = useAuthStore();
   const [isAdminMenuOpen, setIsAdminMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const [categories, setCategories] = useState([]);
+  const [searchQuery, setSearchQuery] = useState(''); // STATE TÌM KIẾM
   const { cartItems } = useCart();
   const navigate = useNavigate();
 
-  // Lấy danh mục từ Database
   useEffect(() => {
     const fetchCategories = async () => {
       try {
@@ -23,8 +25,7 @@ function Navbar({ user, onLogout }) {
     };
     fetchCategories();
   }, []);
-  
-  // Kiểm tra quyền Admin
+
   const isAdmin = user && (user.role === 'ADMIN');
 
   const generateSlug = (name) => {
@@ -37,6 +38,14 @@ function Navbar({ user, onLogout }) {
       .replace(/(\s+)/g, "-")
       .replace(/-+/g, "-")
       .replace(/^-+|-+$/g, "");
+  };
+
+  // --- XỬ LÝ SEARCH TRÊN NAVBAR ---
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
+    }
   };
 
   return (
@@ -61,12 +70,12 @@ function Navbar({ user, onLogout }) {
           </div>
         </Link>
 
-        {/* Menu danh mục TỰ ĐỘNG (Lấy từ Database sau khi đã Seed sạch) */}
-        <nav style={{ display: 'flex', gap: '25px', alignItems: 'center', fontWeight: '500', fontSize: '15px' }}>
+        {/* Menu danh mục TỰ ĐỘNG */}
+        <nav style={{ display: 'flex', gap: '20px', alignItems: 'center', fontWeight: '500', fontSize: '15px' }}>
           <Link to="/" style={{ color: '#d4883b', textDecoration: 'none', fontWeight: 'bold' }}>Trang chủ</Link>
           {categories.map(cat => (
             <Link
-              key={cat.id}
+              key={cat.id || cat._id}
               to={`/category/${generateSlug(cat.name)}`}
               style={{ color: '#333', textDecoration: 'none' }}
             >
@@ -75,14 +84,23 @@ function Navbar({ user, onLogout }) {
           ))}
         </nav>
 
-        {/* Thanh tim kiếm */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>Thanh tim kiếm</div> 
+        {/* THANH TÌM KIẾM HOÀN THIỆN */}
+        <form onSubmit={handleSearchSubmit} style={{ display: 'flex', alignItems: 'center', backgroundColor: '#f5f5f5', borderRadius: '20px', padding: '4px 12px', border: '1px solid #e0e0e0' }}>
+          <input
+            type="text"
+            placeholder="Tìm bánh ngon..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            style={{ border: 'none', background: 'transparent', outline: 'none', fontSize: '13px', width: '140px', padding: '4px' }}
+          />
+          <button type="submit" style={{ border: 'none', background: 'transparent', cursor: 'pointer', fontSize: '14px' }}>🔍</button>
+        </form>
 
         {/* Khung bên phải (Giỏ hàng & User/Admin) */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', position: 'relative', zIndex: 1000 , borderColor : 'blue' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', position: 'relative', zIndex: 1000 }}>
 
           {/* Nút Giỏ Hàng */}
-          { !isAdmin && (
+          {!isAdmin && (
             <Link to="/cart" style={{ textDecoration: 'none' }}>
               <button style={{ backgroundColor: '#fdf6ed', color: '#d4883b', border: '1px solid #e2cbb4', padding: '8px 16px', borderRadius: '20px', cursor: 'pointer', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 🛒 Giỏ hàng ({cartItems?.reduce((acc, item) => acc + item.quantity, 0) || 0})
@@ -90,7 +108,7 @@ function Navbar({ user, onLogout }) {
             </Link>
           )}
 
-          {/* Phân quyền hiển thị User vs Admin */}
+          {/* User vs Admin Menu */}
           {user ? (
             isAdmin ? (
               <div
@@ -108,7 +126,6 @@ function Navbar({ user, onLogout }) {
                   <span style={{ fontSize: '13px', fontWeight: 'bold', color: '#2b1e17' }}>Quản trị</span>
                 </div>
 
-                {/* Dropdown Menu Admin */}
                 {isAdminMenuOpen && (
                   <div style={{ position: 'absolute', top: '100%', right: 0, width: '200px', backgroundColor: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.15)', borderRadius: '8px', padding: '8px 0', zIndex: 1001, border: '1px solid #eee' }}>
                     <div style={{ padding: '8px 16px', fontSize: '12px', color: '#888', borderBottom: '1px solid #eee' }}>
@@ -125,7 +142,7 @@ function Navbar({ user, onLogout }) {
                     </Link>
                     <div style={{ borderTop: '1px solid #eee', marginTop: '5px' }}>
                       <button
-                        onClick={onLogout}
+                        onClick={logout}
                         style={{ width: '100%', textAlign: 'left', padding: '10px 16px', backgroundColor: 'transparent', border: 'none', color: '#e74c3c', cursor: 'pointer', fontSize: '14px' }}
                       >
                         🚪 Đăng xuất
@@ -161,7 +178,7 @@ function Navbar({ user, onLogout }) {
                     </Link>
                     <div style={{ borderTop: '1px solid #eee', marginTop: '5px' }}>
                       <button
-                        onClick={onLogout}
+                        onClick={logout}
                         style={{ width: '100%', textAlign: 'left', padding: '10px 16px', backgroundColor: 'transparent', border: 'none', color: '#e74c3c', cursor: 'pointer', fontSize: '14px' }}
                       >
                         🚪 Đăng xuất

@@ -6,6 +6,7 @@ import AdminCakes from './AdminCakes';
 import ProfilePage from './ProfilePage';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import useAuthStore from '../store/useAuthStore';
 
 function AdminDashboard() {
   const location = useLocation();
@@ -16,8 +17,7 @@ function AdminDashboard() {
   const [cakes, setCakes] = useState([]);
   const [categories, setCategories] = useState([]);
 
-  const authData = JSON.parse(localStorage.getItem('user'));
-  const user = authData?.user || authData;
+  const user = useAuthStore(state => state.user);
 
   const [newCake, setNewCake] = useState({
     name: '',
@@ -29,11 +29,6 @@ function AdminDashboard() {
   });
   const [imageFile, setImageFile] = useState(null);
   const [loading, setLoading] = useState(false);
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    window.location.href = '/login';
-  };
 
   useEffect(() => {
     const tab = queryParams.get('tab');
@@ -117,7 +112,7 @@ function AdminDashboard() {
 
   return (
     <div style={{ backgroundColor: '#f4f7f6', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Navbar user={user} onLogout={handleLogout} />
+      <Navbar />
 
       <div style={{ flex: 1, padding: '40px 8%' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>

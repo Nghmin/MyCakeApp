@@ -7,20 +7,19 @@ import CardCake from '../components/CardCake';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
 
-// Ảnh placeholder tạm thời cho giao diện
 const PLACEHOLDER_IMAGES = {
   hero: 'https://images.unsplash.com/photo-1578985545062-69928b1d9587?auto=format&fit=crop&w=1200&q=80',
   category: 'https://images.unsplash.com/photo-1555507036-ab1f4038808a?auto=format&fit=crop&w=300&q=80',
   cake: 'https://images.unsplash.com/photo-1565958011703-44f9829ba187?auto=format&fit=crop&w=500&q=80',
 };
 
-function Home({ user, onLogout }) {
+function Home() {
   const [cakes, setCakes] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [loading, setLoading] = useState(true);
   const { addToCart } = useCart();
-  console.log("User hiện tại:", user);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -53,11 +52,8 @@ function Home({ user, onLogout }) {
 
   return (
     <div style={{ backgroundColor: '#faf6f0', color: '#333', fontFamily: 'Arial, sans-serif', minHeight: '100vh' }}>
-      
-      {/* ĐƯA NAVBAR VÀO ĐÂY */}
-      <Navbar user={user} onLogout={onLogout} />
-
-      {/* 1. HERO BANNER SECTION */}
+      <Navbar />
+      {/* Picture Section */}
       <section style={{ padding: '20px 8%', display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
         <div style={{ 
           flex: '2 1 600px', 
@@ -114,7 +110,7 @@ function Home({ user, onLogout }) {
         </div>
       </section>
 
-      {/* 2. CATEGORY SECTION */}
+      {/* Categories Section */}
       <section style={{ padding: '30px 8%' }}>
         <span style={{ color: '#d4883b', fontSize: '12px', fontWeight: 'bold', letterSpacing: '1px', textTransform: 'uppercase' }}>
           DANH MỤC SẢN PHẨM
@@ -167,7 +163,7 @@ function Home({ user, onLogout }) {
         </div>
       </section>
 
-      {/* 3. PRODUCT LIST SECTION */}
+      {/* Featured Products Section */}
       <section style={{ padding: '30px 8%' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '25px' }}>
           <div>
@@ -194,7 +190,7 @@ function Home({ user, onLogout }) {
         </div>
       </section>
 
-      {/* 4. FOOTER SECTION TỪ COMPONENT */}
+      {/* Footer */}
       <Footer />
 
     </div>

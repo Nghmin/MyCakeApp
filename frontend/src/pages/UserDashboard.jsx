@@ -4,6 +4,7 @@ import ProfilePage from './ProfilePage';
 import OrderHistory from './OrderHistory';
 import Navbar from '../components/Navbar';
 import Footer from '../components/Footer';
+import useAuthStore from '../store/useAuthStore';
 
 function UserDashboard() {
   const location = useLocation();
@@ -11,14 +12,7 @@ function UserDashboard() {
   const initialTab = queryParams.get('tab') || 'UserInfo';
 
   const [activeTab, setActiveTab] = useState(initialTab);
-
-  const authData = JSON.parse(localStorage.getItem('user'));
-  const user = authData?.user || authData;
-
-  const handleLogout = () => {
-    localStorage.removeItem('user');
-    window.location.href = '/login';
-  };
+  const user = useAuthStore(state => state.user);
 
   useEffect(() => {
     const tab = queryParams.get('tab');
@@ -27,7 +21,7 @@ function UserDashboard() {
 
   return (
     <div style={{ backgroundColor: '#f4f7f6', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Navbar user={user} onLogout={handleLogout} />
+      <Navbar />
 
       <div style={{ flex: 1, padding: '40px 8%' }}>
         {/* Tiêu đề & Tab Switcher */}

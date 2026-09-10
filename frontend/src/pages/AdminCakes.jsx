@@ -1,10 +1,13 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import api from '../api/axios';
 
 function AdminCakes() {
   const [cakes, setCakes] = useState([]);
   const [categories, setCategories] = useState([]);
-
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterCategory, setFilterCategory] = useState('');
+  const [filterStock, setFilterStock] = useState('ALL'); 
+  const [filterBestseller, setFilterBestseller] = useState('ALL');
   // Form thêm bánh
   const [newCake, setNewCake] = useState({
     name: '',
@@ -45,6 +48,28 @@ function AdminCakes() {
     }
   };
 
+  const filteredCakes = useMemo(() => {
+    return cakes.filter(cake => {
+      // Tìm theo tên
+      const matchesSearch = cake.name.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Lọc theo danh mục
+      const cakeCatId = cake.categoryId || cake.category?.id || cake.category?._id;
+      const matchesCategory = filterCategory === '' || String(cakeCatId) === String(filterCategory);
+
+      // Lọc theo tồn kho
+      let matchesStock = true;
+      if (filterStock === 'LOW_STOCK') matchesStock = cake.stock > 0 && cake.stock <= 5;
+      if (filterStock === 'OUT_OF_STOCK') matchesStock = cake.stock === 0;
+
+      // Lọc Bestseller
+      let matchesBestseller = true;
+      if (filterBestseller === 'YES') matchesBestseller = cake.bestseller === true;
+
+      return matchesSearch && matchesCategory && matchesStock && matchesBestseller;
+    });
+  }, [cakes, searchTerm, filterCategory, filterStock, filterBestseller]);
+
   // --- XỬ LÝ THÊM BÁNH ---
   const handleInputChange = (e) => {
     const { name, value, type, checked, files } = e.target;
@@ -77,11 +102,12 @@ function AdminCakes() {
         headers: { 'Content-Type': 'multipart/form-data' }
       });
       alert('Thêm bánh thành công!');
-      setNewCake({ name: '', description: '', price: '', stock: '', categoryId: '', bestseller: false });
+      setNewCake({ name: '', description: '', price: '', stock: '', categoryId: '', image: '', bestseller: false });
       setImageFile(null);
       fetchCakes();
     } catch (err) {
       alert(err.response?.data?.message || 'Lỗi khi thêm bánh');
+      console.log("Lỗi khi thêm bánh:", err);
     } finally {
       setLoading(false);
     }
@@ -209,43 +235,84 @@ function AdminCakes() {
       </div>
 
       {/* Danh sách bánh */}
-      <div style={{ background: '#fff', padding: '30px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)' }}>
-        <h3 style={{ marginTop: 0, marginBottom: '20px', color: '#2b1e17' }}>🍱 Danh Sách Bánh ({cakes.length})</h3>
-        <div style={{ overflowX: 'auto' }}>
+      <div style={{ background: '#fff', padding: '25px', borderRadius: '16px', boxShadow: '0 4px 20px rgba(0,0,0,0.08)', height: 'fit-content' }}>
+        <h3 style={{ marginTop: 0, marginBottom: '15px', color: '#2b1e17' }}>🍱 Danh Sách Bánh ({filteredCakes.length}/{cakes.length})</h3>
+
+        {/* thanh bộ lọc */}
+        <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '10px', marginBottom: '20px', background: '#fcf8f5', padding: '12px', borderRadius: '10px', border: '1px solid #f0e6dd' }}>
+          <input
+            type="text"
+            placeholder="🔍 Tìm theo tên bánh..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: '6px', border: '1px solid #ccc', fontSize: '13px' }}
+          />
+          <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ccc', fontSize: '13px' }}>
+            <option value="">Tất cả danh mục</option>
+            {categories.map(cat => (
+              <option key={cat.id || cat._id} value={cat.id || cat._id}>{cat.name}</option>
+            ))}
+          </select>
+          <select value={filterStock} onChange={(e) => setFilterStock(e.target.value)} style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ccc', fontSize: '13px' }}>
+            <option value="ALL">Tất cả kho</option>
+            <option value="LOW_STOCK">Sắp hết (≤ 5)</option>
+            <option value="OUT_OF_STOCK">Hết hàng (0)</option>
+          </select>
+          <select value={filterBestseller} onChange={(e) => setFilterBestseller(e.target.value)} style={{ padding: '8px', borderRadius: '6px', border: '1px solid #ccc', fontSize: '13px' }}>
+            <option value="ALL">Tất cả loại</option>
+            <option value="YES">🔥 Bán chạy</option>
+          </select>
+        </div>
+
+        <div style={{ overflowX: 'auto', maxHeight: '580px', overflowY: 'auto' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-            <thead>
-              <tr style={{ borderBottom: '2px solid #f5f5f5', color: '#888', fontSize: '14px' }}>
-                <th style={{ padding: '12px' }}>Sản phẩm</th>
-                <th style={{ padding: '12px' }}>Giá</th>
-                <th style={{ padding: '12px' }}>Kho</th>
-                <th style={{ padding: '12px' }}>Hành động</th>
+            <thead style={{ position: 'sticky', top: 0, backgroundColor: '#fff', zIndex: 1, boxShadow: '0 2px 2px -1px rgba(0,0,0,0.05)' }}>
+              <tr style={{ borderBottom: '2px solid #f5f5f5', color: '#888', fontSize: '13px' }}>
+                <th style={{ padding: '10px' }}>Sản phẩm</th>
+                <th style={{ padding: '10px' }}>Giá</th>
+                <th style={{ padding: '10px' }}>Kho</th>
+                <th style={{ padding: '10px' }}>Hành động</th>
               </tr>
             </thead>
             <tbody>
-              {cakes.map(cake => (
-                <tr key={cake.id || cake._id} style={{ borderBottom: '1px solid #f9f9f9' }}>
-                  <td style={{ padding: '12px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <img src={cake.image || 'https://via.placeholder.com/40'} alt="" style={{ width: '45px', height: '45px', borderRadius: '8px', objectFit: 'cover' }} />
-                    <div style={{ fontWeight: '500', color: '#333' }}>{cake.name}</div>
-                  </td>
-                  <td style={{ padding: '12px', color: '#d4883b', fontWeight: 'bold' }}>{new Intl.NumberFormat('vi-VN').format(cake.price)}đ</td>
-                  <td style={{ padding: '12px' }}>
-                    <span style={{ padding: '4px 10px', borderRadius: '12px', backgroundColor: cake.stock < 5 ? '#fff3f3' : '#f0f9f4', color: cake.stock < 5 ? '#e74c3c' : '#27ae60', fontSize: '12px', fontWeight: 'bold' }}>
-                      {cake.stock} chiếc
-                    </span>
-                  </td>
-                  <td style={{ padding: '12px' }}>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button onClick={() => handleEditClick(cake)} style={{ padding: '6px 12px', color: '#2980b9', border: '1px solid #e1f0fa', backgroundColor: '#f0f8ff', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
-                        ✏️ Sửa
-                      </button>
-                      <button onClick={() => handleDelete(cake.id || cake._id)} style={{ padding: '6px 12px', color: '#e74c3c', border: '1px solid #ffecec', backgroundColor: '#fff5f5', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
-                        🗑️ Xóa
-                      </button>
-                    </div>
+              {filteredCakes.length > 0 ? (
+                filteredCakes.map(cake => (
+                  <tr key={cake.id || cake._id} style={{ borderBottom: '1px solid #f9f9f9' }}>
+                    <td style={{ padding: '10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <img src={cake.image || 'https://via.placeholder.com/40'} alt="" style={{ width: '40px', height: '40px', borderRadius: '6px', objectFit: 'cover' }} />
+                      <div>
+                        <div style={{ fontWeight: '500', color: '#333', fontSize: '14px' }}>
+                          {cake.name} {cake.bestseller && <span title="Bán chạy">🔥</span>}
+                        </div>
+                      </div>
+                    </td>
+                    <td style={{ padding: '10px', color: '#d4883b', fontWeight: 'bold', fontSize: '14px' }}>
+                      {new Intl.NumberFormat('vi-VN').format(cake.price)}đ
+                    </td>
+                    <td style={{ padding: '10px' }}>
+                      <span style={{ padding: '3px 8px', borderRadius: '10px', backgroundColor: cake.stock < 5 ? '#fff3f3' : '#f0f9f4', color: cake.stock < 5 ? '#e74c3c' : '#27ae60', fontSize: '12px', fontWeight: 'bold' }}>
+                        {cake.stock} chiếc
+                      </span>
+                    </td>
+                    <td style={{ padding: '10px' }}>
+                      <div style={{ display: 'flex', gap: '6px' }}>
+                        <button onClick={() => handleEditClick(cake)} style={{ padding: '5px 10px', color: '#2980b9', border: '1px solid #e1f0fa', backgroundColor: '#f0f8ff', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
+                          ✏️ Sửa
+                        </button>
+                        <button onClick={() => handleDelete(cake.id || cake._id)} style={{ padding: '5px 10px', color: '#e74c3c', border: '1px solid #ffecec', backgroundColor: '#fff5f5', borderRadius: '6px', cursor: 'pointer', fontSize: '12px' }}>
+                          🗑️ Xóa
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))
+              ) : (
+                <tr>
+                  <td colSpan="4" style={{ textAlign: 'center', padding: '30px', color: '#999' }}>
+                    Không tìm thấy sản phẩm nào khớp với bộ lọc.
                   </td>
                 </tr>
-              ))}
+              )}
             </tbody>
           </table>
         </div>

@@ -15,6 +15,12 @@ const storage = new CloudinaryStorage({
   params: {
     folder: 'MyCakeApp',
     allowed_formats: ['jpg', 'png', 'jpeg'],
+    // Tự động nén và resize ảnh
+    transformation: [
+      { width: 800, height: 800, crop: 'limit' },
+      { quality: 'auto' },
+      { fetch_format: 'auto' }
+    ]
   },
 });
 

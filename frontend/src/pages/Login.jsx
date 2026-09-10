@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/axios';
+import useAuthStore from '../store/useAuthStore';
 
 function Login() {
   const [formData, setFormData] = useState({
@@ -10,6 +11,7 @@ function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const login = useAuthStore((state) => state.login);
 
   const handleChange = (e) => {
     setFormData({
@@ -26,13 +28,15 @@ function Login() {
     try {
       const response = await api.post('/auth/login', formData);
 
-      // Lưu thông tin user và token vào localStorage
+      // Lưu thông tin user vào Zustand store
       const userData = {
         token: response.data.token,
         ...response.data.user
       };
-      localStorage.setItem('user', JSON.stringify(userData));
-      console.log("Thông tin user đã lưu vào localStorage:", userData.token);
+
+      login(userData);
+
+      console.log("Đăng nhập thành công, user đã lưu vào store");
       alert(`Đăng nhập thành công! Chào ${userData.fullName}`);
 
       // Chuyển hướng dựa trên role
@@ -41,9 +45,6 @@ function Login() {
       } else {
         navigate('/');
       }
-
-      // Reload lại trang để update Navbar (cách đơn giản nhất khi chưa dùng Context)
-      window.location.reload();
     } catch (err) {
       setError(err.response?.data?.message || 'Email hoặc mật khẩu không đúng');
     } finally {
